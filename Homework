@@ -1,0 +1,46 @@
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <chrono>
+
+std::mutex fork0;
+std::mutex fork1;
+
+void think(int id) {
+    std::cout << "Philosopher " << id << " is thinking...\n";
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void eat(int id) {
+    std::cout << "Philosopher " << id << " is eating...\n";
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void philosopher(int id) {
+    while (true) {
+        think(id);
+
+        if (id == 0) {
+            fork0.lock();
+            fork1.lock();
+        } else {
+            fork1.lock();
+            fork0.lock();
+        }
+
+        eat(id);
+
+        fork0.unlock();
+        fork1.unlock();
+    }
+}
+
+int main() {
+    std::thread p0(philosopher, 0);
+    std::thread p1(philosopher, 1);
+
+    p0.join();
+    p1.join();
+
+    return 0;
+}
